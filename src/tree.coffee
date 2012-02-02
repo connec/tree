@@ -68,6 +68,7 @@ module.exports = class Tree
     # Trigger the node:add callback to see if we should continue
     return false if @trigger('node:add', node, null) is false
     
+    @$wrapper.find('*').remove()
     @$wrapper.append node.$elem
     [old_root, @root] = [@root, node]
     return old_root
@@ -234,50 +235,6 @@ module.exports = class Tree
     context.moveTo x.start, y.start
     context.bezierCurveTo x.cp1, y.cp1, x.cp2, y.cp2, x.end, y.end
     context.stroke()
-  
-  ###
-  Redraws the edge between the given node and its parent.
-  ###
-  draw_edges: ->
-    get_child_offset = (node) =>
-      (node.$elem[@options.breadth]() - parseInt(node.$edge.css 'line-height')) / 2 + node.$elem.position()[@options.child_offset]
-    
-    prepare_context = (node) =>
-      context = node.$edge.get(0).getContext '2d'
-      context.strokeStyle = node.$edge.css 'color'
-      context.lineWidth = parseInt node.$edge.css 'line-height'
-      context.beginPath()
-      context.clearRect 0, 0, node.$edge.width(), node.$edge.height()
-      return context
-    
-    swap = (x, y) =>
-      if @options.level_offset is 'right'
-        [x.start, x.end, x.cp1, x.cp2] = [x.end, x.start, x.cp2, x.cp1]
-      return [y, x] if @options.breadth is 'height'
-      return [x, y]
-    
-    cp1_offset = 0.3 * @options.level_spacing
-    cp2_offset = @options.level_spacing - cp1_offset
-    
-    for node in @root.subtree_nodes()
-      continue unless node.parent
-      
-      start   = get_child_offset node.parent
-      end     = get_child_offset node
-      x       = {start, end}
-      y       = {start: 0, end: @options.level_spacing}
-      context = prepare_context node
-      if start == end
-        [x, y] = swap x, y
-        context.moveTo x.start, y.start
-        context.lineTo x.end, y.end
-      else
-        [x.cp1, x.cp2] = [start, end]
-        [y.cp1, y.cp2] = [cp1_offset, cp2_offset]
-        [x, y] = swap x, y
-        context.moveTo x.start, y.start
-        context.bezierCurveTo x.cp1, y.cp1, x.cp2, y.cp2, x.end, y.end
-      context.stroke()
   
   ###
   Computes the child offset for the given node.

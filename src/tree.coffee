@@ -22,7 +22,6 @@ module.exports = class Tree
   ###
   @callbacks =
     'anim:after' : []
-    'edge:draw'  : []
     'node:add'   : []
     'node:click' : []
     'node:remove': []

@@ -75,7 +75,8 @@ tree.bind('anim:after', function() {
 });
 ```
 
-For a more advanced example, see `index.html` in the `example` directory.
+For a more advanced example, see
+(the example)[http://connec.github.com/tree/example/].
 
 ## API
 

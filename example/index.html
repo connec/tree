@@ -29,14 +29,17 @@
             z-index: 0;
             position: absolute;
             line-height: 1px;
-            color: #aaa;
+            color: #c66;
           }
           .tree .wrapper .node .label {
             display: block;
             width: 150px;
             height: 25px;
             line-height: 25px;
-            background-color: #ccc;
+            background-image: -moz-linear-gradient(-80deg, #f99, #c66);
+            background-image: -webkit-linear-gradient(-80deg, #f99, #c66);
+            border: 1px solid #c66;
+            box-shadow: 1px 1px 5px black;
             cursor: pointer;
             font-family: 'Lucida Console', monospace;
             font-size: 10pt;
@@ -45,11 +48,18 @@
           .tree .wrapper .node.in-path {}
             .tree .wrapper .node.in-path .edge {
               z-index: 10;
-              color: #888;
+              color: #66c;
               line-height: 3px;
             }
             .tree .wrapper .node.in-path .label {
-              background-color: #aaa;
+              background-image: -moz-linear-gradient(-80deg, #99f, #66c);
+              background-image: -webkit-linear-gradient(-80deg, #99f, #66c);
+              border: 1px solid #66c;
+            }
+            .tree .wrapper .node.in-path.selected .label {
+              background-image: -moz-linear-gradient(-80deg, #9f9, #6c6);
+              background-image: -webkit-linear-gradient(-80deg, #9f9, #6c6);
+              border: 1px solid #6c6;
             }
   </style>
   <script src='jquery.js'></script>

@@ -1,0 +1,144 @@
+<!doctype html>
+<html>
+<head>
+  <title>Tree</title>
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+    
+    .tree {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+      .tree .wrapper {
+        position: absolute;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+        .tree .wrapper .node {
+          display: block;
+          position: absolute;
+        }
+          .tree .wrapper .node .edge {
+            z-index: 0;
+            position: absolute;
+            line-height: 1px;
+            color: #aaa;
+          }
+          .tree .wrapper .node .label {
+            display: block;
+            width: 150px;
+            height: 25px;
+            line-height: 25px;
+            background-color: #ccc;
+            cursor: pointer;
+            font-family: 'Lucida Console', monospace;
+            font-size: 10pt;
+            text-align: center;
+          }
+          .tree .wrapper .node.in-path {}
+            .tree .wrapper .node.in-path .edge {
+              z-index: 10;
+              color: #888;
+              line-height: 3px;
+            }
+            .tree .wrapper .node.in-path .label {
+              background-color: #aaa;
+            }
+  </style>
+  <script src='jquery.js'></script>
+  <script src='async.js'></script>
+  <script src='https://raw.github.com/connec/tree/master/lib/tree.js'></script>
+  <script src='data.js'></script>
+  <script>
+    $(function() {
+      // Create a tree and initialise the root
+      window.tree = new Tree($('#tree'));
+      tree.bind('node:add', function(node, context) {
+        if(!context)
+          node.data = window.data;
+        else {
+          for(var i in context.data.children) {
+            if(context.data.children[i].id == node.$label.text())
+              node.data = context.data.children[i]
+          }
+        }
+      });
+      tree.bind('node:remove', function(node) {
+        delete node.data;
+      });
+      tree.bind('node:click', function(node) {
+        var i;
+        
+        if(node.$elem.hasClass('selected'))
+          return;
+        
+        var direction = 'up';
+        if(node.parent && node.parent.$elem.hasClass('selected'))
+          direction = 'down';
+        
+        $('.in-path, .selected').removeClass('in-path selected');
+        var parents = node.parents();
+        for(i in parents)
+          parents[i].$elem.addClass('in-path');
+        node.$elem.addClass('in-path selected');
+        
+        if(direction == 'down') {
+          var siblings = node.siblings();
+          for(i in siblings)
+            tree.remove_node(siblings[i]);
+          tree.set_centre(node);
+          tree.animate();
+          
+          if(!node.data.children.length)
+            return;
+          
+          tree.bind_once('anim:after', function() {
+            var children = node.data.children;
+            for(i in children)
+              tree.insert_node(children[i].id, node);
+            tree.animate();
+          });
+        } else {
+          var only_child = node.children[0];
+          var children = only_child.children.slice(0);
+          for(i in children)
+            tree.remove_node(children[i]);
+          tree.set_centre(node);
+          tree.animate();
+          
+          tree.bind_once('anim:after', function() {
+            var index = 0;
+            var children = node.data.children;
+            for(i in children) {
+              if(only_child.$label.text() == children[i].id)
+                index++;
+              else
+                tree.insert_node(children[i].id, node, index);
+              index++;
+            }
+            tree.animate();
+          });
+        }
+      });
+      
+      tree.set_root(data.id);
+      tree.root.$elem.addClass('in-path selected');
+      for(var i in tree.root.data.children)
+        tree.insert_node(tree.root.data.children[i].id, tree.root);
+      
+      tree.set_centre(tree.root);
+      tree.refresh();
+    });
+  </script>
+</head>
+<body>
+  <div id='tree'></div>
+</body>
+</html>

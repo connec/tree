@@ -6,6 +6,11 @@ A Tree instance manages a single tree visualisation.
 module.exports = class Tree
   
   ###
+  Expose the Node as an inner class.
+  ###
+  @Node = Node
+  
+  ###
   The default options.
   ###
   @options =

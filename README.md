@@ -1,5 +1,7 @@
 # Tree
 
+[Example](http://connec.github.com/tree/example/).
+
 Tree is a small library for creating animated space trees similar to those
 available in the [Javascript InfoVis Toolkit](http://thejit.org/), with a
 slightly different API and ground-up support for node ordering.
@@ -76,7 +78,7 @@ tree.bind('anim:after', function() {
 ```
 
 For a more advanced example, see
-(the example)[http://connec.github.com/tree/example/].
+[the example](http://connec.github.com/tree/example/).
 
 ## API
 

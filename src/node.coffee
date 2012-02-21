@@ -8,6 +8,7 @@ module.exports = class Node
   ###
   constructor: (label) ->
     @depth    = 0
+    @tree     = null
     @parent   = null
     @children = []
     
@@ -22,6 +23,7 @@ module.exports = class Node
   ###
   insert_child: (node, index = @children.length) ->
     node.depth               = @depth + 1
+    node.tree                = @tree
     node.parent              = @
     node.$elem.attr 'data-depth', node.depth
     @children[index...index] = node
@@ -31,6 +33,7 @@ module.exports = class Node
   ###
   remove_child: (node) ->
     node.depth  = 0
+    node.tree   = null
     node.parent = null
     node.$elem.attr 'node-depth', 0
     @children.splice @children.indexOf(node), 1

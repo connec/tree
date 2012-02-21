@@ -74,6 +74,7 @@ module.exports = class Tree
     
     @$wrapper.find('*').remove()
     @$wrapper.append node.$elem
+    child.tree = @ for child in node.subtree_nodes()
     [old_root, @root] = [@root, node]
     return old_root
   

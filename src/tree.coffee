@@ -67,7 +67,7 @@ module.exports = class Tree
   and returned.
   ###
   set_root: (node) ->
-    node = new Node node unless node instanceof Node
+    node = new Node node unless typeof node is 'object'
     
     # Trigger the node:add callback to see if we should continue
     return false if @trigger('node:add', node, null) is false
@@ -88,7 +88,7 @@ module.exports = class Tree
   isn't given `node` is appended.
   ###
   insert_node: (node, context, index = null) ->
-    node = new Node node unless node instanceof Node
+    node = new Node node unless typeof node is 'object'
     
     # Trigger the node:add callback to see if we should continue
     return false if @trigger('node:add', node, context) is false

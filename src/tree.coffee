@@ -342,7 +342,7 @@ module.exports = class Tree
   Removes a callback from an event.
   ###
   unbind: (event, callback) ->
-    if callback
+    if callback and callback in @callbacks[event]
       @callbacks[event].splice @callbacks[event].indexOf(callback), 1
     else
       @callbacks[event].splice 0, @callbacks[event].length

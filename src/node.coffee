@@ -100,3 +100,9 @@ module.exports = class Node
   ###
   next_subtrees: ->
     @next_siblings().concat @parent?.next_subtrees() ? []
+  
+  ###
+  Computes a JSON representation of the Node - simply the label.
+  ###
+  toJSON: ->
+    @$label.text()

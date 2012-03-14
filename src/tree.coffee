@@ -52,8 +52,9 @@ module.exports = class Tree
     @clear_cache()
     
     # Keep track of changes between calls to `refresh` or `animate`.
-    @insertions = []
-    @removals   = []
+    @insertions      = []
+    @removals        = []
+    @previous_styles = '{}'
     
     @$container = $(@$container).addClass 'tree'
     @$wrapper   = $('<ul/>').addClass('wrapper').appendTo @$container
@@ -124,6 +125,10 @@ module.exports = class Tree
     
     @insertions = []
     @removals   = []
+    
+    # Don't bother checking styles when refreshing as it makes little difference
+    @previous_styles = JSON.stringify styles
+    
     return @
   
   ###
@@ -138,6 +143,11 @@ module.exports = class Tree
     , =>
       # Finished fading
       styles = @layout()
+      
+      # Skip animating if it's determined that the style hasn't changed
+      json_styles = JSON.stringify styles
+      return @trigger('anim:after') if json_styles == @previous_styles
+      
       async.parallel [
         (done) =>
           @$wrapper.animate styles.wrapper, complete: done
@@ -152,8 +162,9 @@ module.exports = class Tree
           , done
       ], =>
         # Finished animating
-        @insertions = []
-        @removals   = []
+        @insertions      = []
+        @removals        = []
+        @previous_styles = json_styles
         @trigger 'anim:after'
     
     return @

@@ -265,7 +265,11 @@ module.exports = class Tree
       offset = 0
       for subtree in node.previous_subtrees()
         offset += @get_subtree_breadth(subtree) + @options.child_spacing
-      return offset unless node.children.length
+      
+      unless node.children.length
+        # If the node is the first leaf, add some spacing
+        offset += 10 unless node.previous_sibling()
+        return offset
       
       # Non-leaf nodes additionally need to be centered
       breadth  = @options.child_spacing * (node.children.length - 1)
@@ -295,10 +299,15 @@ module.exports = class Tree
   ###
   get_subtree_breadth: (node) ->
     @use_cache 'subtree_breadth', node, =>
-      return node.$elem[@options.breadth]() unless node.children.length
+      unless node.children.length
+        breadth = node.$elem[@options.breadth]()
+        breadth += 10 unless node.previous_sibling()
+        breadth += 10 unless node.next_sibling()
+        return breadth
       
       breadth = @options.child_spacing * (node.children.length - 1)
       breadth += @get_subtree_breadth child for child in node.children
+      
       Math.max node.$elem[@options.breadth](), breadth
   
   ###

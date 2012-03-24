@@ -70,9 +70,6 @@ module.exports = class Tree
   set_root: (node) ->
     node = new Node node unless typeof node is 'object'
     
-    # Trigger the node:add callback to see if we should continue
-    return false if @trigger('node:add', node, null) is false
-    
     @$wrapper.find('*').remove()
     @$wrapper.append node.$elem
     child.tree = @ for child in node.subtree_nodes()
@@ -92,10 +89,6 @@ module.exports = class Tree
   insert_node: (node, context, index = null) ->
     node = new Node node unless typeof node is 'object'
     
-    # Trigger the node:add callback to see if we should continue
-    return false if @trigger('node:add', node, context) is false
-    
-    # Actually insert the node
     @insertions = @insertions.concat node.subtree_nodes()
     context.insert_child node, index
     
@@ -175,7 +168,11 @@ module.exports = class Tree
   layout: ->
     # Add all inserted nodes to the DOM, invisible, so their dimensions are
     # available.
-    @$wrapper.append node.$elem.fadeTo(0, 0) for node in @insertions
+    for node in @insertions
+      @$wrapper.append node.$elem.fadeTo(0, 0)
+      
+      # Trigger the node:add event once it has been displayed
+      @trigger 'node:add', node
     
     # Clear the cache of previous values
     @clear_cache()

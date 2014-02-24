@@ -76,9 +76,9 @@
         if(!context)
           node.data = window.data;
         else {
-          for(var i in context.data.children) {
-            if(context.data.children[i].id == node.$label.text())
-              node.data = context.data.children[i]
+          for(var i in context.children) {
+            if(context.children[i].id == node.$label.text())
+              node.data = context.children[i]
           }
         }
       });
@@ -108,11 +108,11 @@
           tree.set_centre(node);
           tree.animate();
           
-          if(!node.data.children.length)
+          if(!node.children.length)
             return;
           
           tree.bind_once('anim:after', function() {
-            var children = node.data.children;
+            var children = node.children;
             for(i in children)
               tree.insert_node(children[i].id, node);
             tree.animate();
@@ -127,7 +127,7 @@
           
           tree.bind_once('anim:after', function() {
             var index = 0;
-            var children = node.data.children;
+            var children = node.children;
             for(i in children) {
               if(only_child.$label.text() == children[i].id)
                 index++;
@@ -142,8 +142,8 @@
       
       tree.set_root(data.id);
       tree.root.$elem.addClass('in-path selected');
-      for(var i in tree.root.data.children)
-        tree.insert_node(tree.root.data.children[i].id, tree.root);
+      for(var i in tree.root.children)
+        tree.insert_node(tree.root.children[i].id, tree.root);
       
       tree.set_centre(tree.root);
       tree.refresh();

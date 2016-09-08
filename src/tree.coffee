@@ -4,12 +4,12 @@ Node = require './node'
 A Tree instance manages a single tree visualisation.
 ###
 module.exports = class Tree
-  
+
   ###
   Expose the Node as an inner class.
   ###
   @Node = Node
-  
+
   ###
   The default options.
   ###
@@ -21,7 +21,7 @@ module.exports = class Tree
     child_spacing:  5
     level_spacing:  50
     edge_curvature: 0.5
-  
+
   ###
   The default (empty) callbacks.
   ###
@@ -30,7 +30,7 @@ module.exports = class Tree
     'node:add'   : []
     'node:click' : []
     'node:remove': []
-  
+
   ###
   The default (empty) caches.
   ###
@@ -40,7 +40,7 @@ module.exports = class Tree
     level_offset:    get_empty_cache()
     subtree_breadth: get_empty_cache()
     level_height:    get_empty_cache()
-  
+
   ###
   Initialises the Tree and sets up the container element.
   ###
@@ -50,80 +50,80 @@ module.exports = class Tree
     @root       = null
     @centre     = null
     @clear_cache()
-    
+
     # Keep track of changes between calls to `refresh` or `animate`.
     @insertions      = []
     @removals        = []
     @previous_styles = '{}'
-    
+
     @$container = $(@$container).addClass 'tree'
     @$wrapper   = $('<ul/>').addClass('wrapper').appendTo @$container
-    
+
     @$container.bind 'click.tree', (event) =>
       if node = $(event.target).closest('.label').parent().data('node')
         @trigger 'node:click', node
-  
+
   ###
   Sets the root of the tree.  If the tree already has a root it will be removed
   and returned.
   ###
   set_root: (node) ->
     node = new Node node unless typeof node is 'object'
-    
+
     @$wrapper.find('*').remove()
-    @$wrapper.append node.$elem
+    @insertions = @insertions.concat [ node ]
     child.tree = @ for child in node.subtree_nodes()
     [old_root, @root] = [@root, node]
     return old_root
-  
+
   ###
   Sets the centre of the tree.
   ###
   set_centre: (node) ->
     @centre = node
-  
+
   ###
   Inserts a new node into the given `context`s children at `index`.  If `index`
   isn't given `node` is appended.
   ###
   insert_node: (node, context, index = null) ->
     node = new Node node unless typeof node is 'object'
-    
+
     @insertions = @insertions.concat node.subtree_nodes()
     context.insert_child node, index
-    
+
   ###
   Removes a node from the tree.
   ###
   remove_node: (node) ->
     # Trigger the node:remove callback to see if we should continue
     return false if @trigger('node:remove', node) is false
-    
+
     # Actually remove the node
     @removals = @removals.concat node.subtree_nodes()
     node.parent.remove_child node
-  
+
   ###
   Refreshes the tree visualisation.
   ###
   refresh: ->
     node.$elem.remove() for node in @removals
-    
+
     styles = @layout()
     @$wrapper.css styles.wrapper
     for {node, elem} in styles.nodes
       node.$elem.css elem
       node.$elem.fadeTo 0, 1
       @draw_edge node
-    
+
     @insertions = []
     @removals   = []
-    
+
     # Don't bother checking styles when refreshing as it makes little difference
     @previous_styles = JSON.stringify styles
-    
+
     return @
-  
+
   ###
   Computes the layout of the tree and animates the transition from the current
   state to the new layout.
@@ -136,11 +136,11 @@ module.exports = class Tree
     , =>
       # Finished fading
       styles = @layout()
-      
+
       # Skip animating if it's determined that the style hasn't changed
       json_styles = JSON.stringify styles
       return @trigger('anim:after') if json_styles == @previous_styles
-      
+
       async.parallel [
         (done) =>
           @$wrapper.animate styles.wrapper, complete: done
@@ -159,9 +159,9 @@ module.exports = class Tree
         @removals        = []
         @previous_styles = json_styles
         @trigger 'anim:after'
-    
+
     return @
-  
+
   ###
   Performs the layout computations common to both refresh and animate.
   ###
@@ -170,17 +170,17 @@ module.exports = class Tree
     # available.
     for node in @insertions
       @$wrapper.append node.$elem.fadeTo(0, 0)
-      
+
       # Trigger the node:add event once it has been displayed
       @trigger 'node:add', node
-    
+
     # Clear the cache of previous values
     @clear_cache()
-    
+
     styles =
       wrapper: {}
       nodes:   []
-    
+
     # Compute the properties
     for node in @root.subtree_nodes()
       css = {node, elem: {}, edge: {}}
@@ -189,52 +189,52 @@ module.exports = class Tree
       css.edge[@options.child_offset] = -css.elem[@options.child_offset]
       css.edge[@options.level_offset] = -@options.level_spacing
       styles.nodes.push css
-      
+
       # Set the wrapper css to centre on this node
       if @centre == node
         styles.wrapper[@options.child_offset] = (@$container[@options.breadth]() - node.$elem[@options.breadth]()) / 2 - css.elem[@options.child_offset]
         styles.wrapper[@options.level_offset] = (@$container[@options.height]() - node.$elem[@options.height]()) / 2 - css.elem[@options.level_offset]
-    
+
     return styles
-  
+
   ###
   Redraws the edge of the given node.
   ###
   draw_edge: (node) ->
     return unless node.parent
-    
+
     $node   = node.$elem
     $edge   = node.$edge
     $parent = node.parent.$elem
-    
+
     style =
       color: $edge.css 'color'
       width: parseInt $edge.css 'line-height'
     style.offset = style.width / 2
-    
+
     node_end     = $node.position()[@options.child_offset] + $node[@options.breadth]() / 2
     parent_end   = $parent.position()[@options.child_offset] + $parent[@options.breadth]() / 2
     edge_offset  = Math.min(node_end, parent_end) - style.offset
     edge_breadth = Math.abs(node_end - parent_end) + style.width
-    
+
     $edge.attr @options.breadth, edge_breadth
     $edge.attr @options.height, @options.level_spacing
     $edge.css @options.child_offset, edge_offset - $node.position()[@options.child_offset]
     $edge.css @options.level_offset, -@options.level_spacing
-    
+
     context = $edge.get(0).getContext '2d'
     context.strokeStyle = style.color
     context.lineWidth   = style.width
     context.clearRect 0, 0, $edge.width(), $edge.height()
     context.beginPath()
-    
+
     x       = {}
     x.start = style.offset
     x.end   = edge_breadth - style.offset
     [x.start, x.end] = [x.end, x.start] if node_end < parent_end
     x.cp1   = x.start
     x.cp2   = x.end
-    
+
     y = {}
     y.start = 0
     y.cp1   = @options.edge_curvature * @options.level_spacing
@@ -242,16 +242,16 @@ module.exports = class Tree
     y.end   = @options.level_spacing
     if @options.level_offset is 'bottom' or @options.level_offset is 'right'
       [y.start, y.cp1, y.cp2, y.end] = [y.end, y.cp2, y.cp1, y.start]
-    
+
     [x, y] = [y, x] if @options.breadth is 'height'
-    
+
     context.moveTo x.start, y.start
     context.bezierCurveTo x.cp1, y.cp1, x.cp2, y.cp2, x.end, y.end
     context.stroke()
-  
+
   ###
   Computes the child offset for the given node.
-  
+
   The child offset is given by:
     The sum of the breadths of all previous subtrees, if the node is a leaf.
     Vertically aligning the node with its children, otherwise.
@@ -262,23 +262,23 @@ module.exports = class Tree
       offset = 0
       for subtree in node.previous_subtrees()
         offset += @get_subtree_breadth(subtree) + @options.child_spacing
-      
+
       unless node.children.length
         # If the node is the first leaf, add some spacing
         offset += 10 unless node.previous_sibling()
         return offset
-      
+
       # Non-leaf nodes additionally need to be centered
       breadth  = @options.child_spacing * (node.children.length - 1)
       breadth += @get_subtree_breadth subtree for subtree in node.children
       offset  += (breadth - node.$elem[@options.breadth]()) / 2
-  
+
   ###
   Computes the level offset for the given node.
-  
+
   The level offset is given by:
     0, if the node is the root of the tree.
-    
+
     The offset of the previous level plus the previous level's height,
     otherwise.
   ###
@@ -286,10 +286,10 @@ module.exports = class Tree
     @use_cache 'level_offset', node, =>
       return 0 if node == @root
       @get_level_offset(node.parent) + @get_level_height(node.parent) + @options.level_spacing
-  
+
   ###
   Computes the breadth of a subtree.
-  
+
   The breadth of a subtree is given by:
     The maximum of the breadth of the node, or the sum of the breadths of its
     children.
@@ -301,15 +301,15 @@ module.exports = class Tree
         breadth += 10 unless node.previous_sibling()
         breadth += 10 unless node.next_sibling()
         return breadth
-      
+
       breadth = @options.child_spacing * (node.children.length - 1)
       breadth += @get_subtree_breadth child for child in node.children
-      
+
       Math.max node.$elem[@options.breadth](), breadth
-  
+
   ###
   Computes the height of the level of the given node.
-  
+
   The height of a level is given by:
     The maximum of the heights of all nodes in the level.
   ###
@@ -319,19 +319,19 @@ module.exports = class Tree
       $heights = @$wrapper.find("[data-depth=#{node.depth}]").map ->
         $(@)[options.height]()
       Math.max.apply Math, $heights.get()
-  
+
   ###
   Clears the cache.
   ###
   clear_cache: ->
     @caches = $.extend true, {}, @constructor.caches
-  
+
   ###
   Gets a value from the cache, if it exists.
   ###
   get_cached: (name, node) ->
     @caches[name].values[@caches[name].keys.indexOf node]
-  
+
   ###
   Sets a value in the cache.
   ###
@@ -339,7 +339,7 @@ module.exports = class Tree
     @caches[name].keys.push node
     @caches[name].values.push value
     return value
-  
+
   ###
   Returns a value in the cache if one is found, otherwise the value is computed
   and cached.
@@ -347,14 +347,14 @@ module.exports = class Tree
   use_cache: (name, node, compute) ->
     return cached if cached = @get_cached name, node
     @set_cached name, node, compute()
-  
+
   ###
   Adds a callback for an event.
   ###
   bind: (event, callback) ->
     @callbacks[event].push callback
     return callback
-  
+
   ###
   Removes a callback from an event.
   ###
@@ -363,7 +363,7 @@ module.exports = class Tree
       @callbacks[event].splice @callbacks[event].indexOf(callback), 1
     else
       @callbacks[event].splice 0, @callbacks[event].length
-  
+
   ###
   Adds a callback for an event, which executes the given callback then removes
   itself from the callback list so it can only be triggered once.
@@ -373,7 +373,7 @@ module.exports = class Tree
       @unbind event, new_callback
       callback.apply @, args
     @bind event, new_callback
-  
+
   ###
   Executes the callbacks for an event with given arguments.
   ###

@@ -8,7 +8,7 @@
       margin: 0;
       padding: 0;
     }
-    
+
     .tree {
       position: relative;
       width: 100%;
@@ -72,13 +72,13 @@
     $(function() {
       // Create a tree and initialise the root
       window.tree = new Tree($('#tree'));
-      tree.bind('node:add', function(node, context) {
-        if(!context)
+      tree.bind('node:add', function(node) {
+        if(!node.parent)
           node.data = window.data;
         else {
-          for(var i in context.data.children) {
-            if(context.data.children[i].id == node.$label.text())
-              node.data = context.data.children[i]
+          for(var i in node.parent.data.children) {
+            if(node.parent.data.children[i].id == node.$label.text())
+              node.data = node.parent.data.children[i]
           }
         }
       });
@@ -87,30 +87,30 @@
       });
       tree.bind('node:click', function(node) {
         var i;
-        
+
         if(node.$elem.hasClass('selected'))
           return;
-        
+
         var direction = 'up';
         if(node.parent && node.parent.$elem.hasClass('selected'))
           direction = 'down';
-        
+
         $('.in-path, .selected').removeClass('in-path selected');
         var parents = node.parents();
         for(i in parents)
           parents[i].$elem.addClass('in-path');
         node.$elem.addClass('in-path selected');
-        
+
         if(direction == 'down') {
           var siblings = node.siblings();
           for(i in siblings)
             tree.remove_node(siblings[i]);
           tree.set_centre(node);
           tree.animate();
-          
+
           if(!node.data.children.length)
             return;
-          
+
           tree.bind_once('anim:after', function() {
             var children = node.data.children;
             for(i in children)
@@ -124,7 +124,7 @@
             tree.remove_node(children[i]);
           tree.set_centre(node);
           tree.animate();
-          
+
           tree.bind_once('anim:after', function() {
             var index = 0;
             var children = node.data.children;
@@ -139,13 +139,16 @@
           });
         }
       });
-      
+
       tree.set_root(data.id);
       tree.root.$elem.addClass('in-path selected');
-      for(var i in tree.root.children)
-        tree.insert_node(tree.root.children[i].id, tree.root);
-      
-      tree.set_centre(tree.root);
+      tree.bind_once('node:add', function (node) {
+        for(var i in tree.root.data.children)
+          tree.insert_node(tree.root.data.children[i].id, tree.root);
+
+        tree.set_centre(tree.root);
+        tree.refresh();
+      })
       tree.refresh();
     });
   </script>
